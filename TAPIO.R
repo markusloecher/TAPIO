@@ -3,8 +3,8 @@
 library(NbClust)
 library(fastcluster)
 library(FactoMineR)
-source("~/GitHub/TAPIO/calc_SIL.R")
-source("~/GitHub/TAPIO/association.R")
+source("calc_SIL.R")
+source("association.R")
 
 TAPIO <- function(DATA, k=NaN, n_features=NaN, n_trees=500, 
 						do.pca=TRUE, do.MFA=FALSE, do.leveling=TRUE, 

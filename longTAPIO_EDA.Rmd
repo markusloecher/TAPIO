@@ -1,0 +1,189 @@
+---
+title: "Clustering longitudinal data using TAPIO"
+author: "ML"
+date: "2025-02-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+rerun = FALSE
+```
+
+```{r}
+library(NbClust)
+library(fastcluster)
+library(FactoMineR)
+
+source("longTAPIO.R")
+source("longTAPIO_try.R")
+source("TAPIO.R")
+source("calc_SIL.R")
+source("association.R")
+
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+```
+
+
+
+## Univariate data
+
+### Three diverging lines (kml)
+
+```{r}
+
+set.seed(123)
+ex2 <- kml::generateArtificialLongData(
+   meanTrajectories=list(function(t)0,function(t)-t,function(t)t),
+   nbEachClusters=c(50,50,50),
+   residualVariation=function(t){rnorm(1,0,0.35)}
+)
+
+trueClusIDs = rep(1:3,each=50)
+#plot(ex2,parTraj=parTRAJ(col=rep(2:4,each=50)))
+x =attr(ex2, "traj") #columns: time, rows: subjects
+user_ids = rep(1:nrow(x), each = ncol(x))
+
+matplot(t(x),type="l",lty=1, col= trueClusIDs) ;grid()     
+```
+
+#### kml inspired distance matrix
+
+```{r}
+res = longTAPIO_try(matrix(as.vector(t(x)),ncol=1), k = 3, user_id =user_ids, levels=3, verbose = 1)
+foundClusIDs = res$cl
+#confusion matrix
+table(foundClusIDs, trueClusIDs)
+```
+
+#### row sampling
+
+```{r}
+#compare to row sampliung:
+DATA = matrix(as.vector(t(x)),ncol=1)
+rownames(DATA) = user_ids
+res2 = longTAPIO(DATA, k = 3, levels=3)
+
+foundClusIDs = res2$cl
+#confusion matrix (well within the ambiguity of renumbering)
+table(foundClusIDs, trueClusIDs)
+```
+
+### iris
+
+```{r, echo = FALSE}
+data(iris)
+D = iris[,1:4]
+
+# custom function to implement min max scaling
+minMax <- function(x) {
+  (x - min(x, na.rm=TRUE)) / (max(x, na.rm=TRUE) - min(x, na.rm=TRUE))
+}
+
+D_norm = as.data.frame(lapply(D, minMax))
+D_norm = as.matrix(D_norm)
+
+outcome = iris[,5]
+
+## define the repeated measures (toy example with iris)
+# Ten measures per sample
+rownames(D_norm) = sort(rep(1:10, 15))
+```
+
+#### kml inspired distance matrix
+
+```{r}
+res = longTAPIO_try(D_norm, user_id = rownames(D_norm), k=3, n_trees=1000, levels=3)
+trueClusIDs = aggregate(as.numeric(outcome),FUN= Mode,by = list(rownames(D_norm)))[,2]
+foundClusIDs = res$cl
+#confusion matrix (well within the ambiguity of renumbering)
+table(foundClusIDs, trueClusIDs)
+#sample size seems too low for any conclusion
+```
+
+#### row sampling
+
+```{r}
+res = longTAPIO(D_norm, k=3, n_trees=1000, levels=3)
+trueClusIDs = aggregate(as.numeric(outcome),FUN= Mode,by = list(rownames(D_norm)))[,2]
+foundClusIDs = res$cl
+#confusion matrix (well within the ambiguity of renumbering)
+table(foundClusIDs, trueClusIDs)
+#sample size seems too low for any conclusion
+```
+
+
+### Multiple dimensions! (from clusterMLD)
+
+```{r}
+p = "data/"
+load(paste0(p, "Longdat_clusters.rda"))
+clusterMLD::MeanPlot(output)
+```
+
+```{r, eval = rerun, echo = F}
+#library(clusterMLD)
+data(Longdat, package = "clusterMLD")
+
+y = Longdat$Dat[,paste("y", seq(5), sep = "_")]#[1:7,]
+old_t = Longdat$Dat$obs#[1:7]
+#we first transfer the observations to the same times!
+#quantile(Longdat$Dat$obs, p = seq(0,1,length=11))
+interPolateTS = function(y, old_t, new_t = 1:10){
+  library(zoo)
+  y_ts = zoo(y, old_t)
+  z_ts = zoo(order.by = new_t*1.0)
+  # Merge series into one object
+  z <- merge(y_ts,z_ts)
+  z_int = na.approx(z, rule = 2)
+  return(window(z_int, 1:10))
+}
+
+ids = unique(Longdat$Dat$id)
+for (i in ids) {
+  jj = which(Longdat$Dat$id == i)
+  tmp = as.data.frame(interPolateTS(y[jj,],old_t[jj]))
+  tmp$id = i
+  tmp$label = unique(Longdat$Dat$label[jj])
+  if (i == 1) {
+    y_int = tmp
+  } else {
+    y_int = rbind.data.frame(y_int, tmp)
+  }
+}
+save(y_int, file = "data/LongDat_interpolated.rda")
+
+```
+
+Interpolated Data at fixed times:
+
+```{r}
+load("data/LongDat_interpolated.rda")
+```
+
+#### kml inspired distance matrix
+
+```{r}
+res = longTAPIO_try(as.matrix(y_int[,1:5]), k = 4, user_id = y_int$id, levels=4, verbose = 1)
+trueClusIDs = aggregate(y_int$label, function(x) return(x[1]), by = list(y_int$id))[,2]
+foundClusIDs = res$cl
+#confusion matrix
+table(foundClusIDs, trueClusIDs)
+```
+#### row sampling
+
+```{r}
+#compare to row sampliung:
+DATA = as.matrix(y_int[,1:5])
+rownames(DATA) = y_int$id
+res2 = longTAPIO(DATA, k = 4, levels=4)
+
+foundClusIDs = res2$cl
+#confusion matrix (well within the ambiguity of renumbering)
+table(foundClusIDs, trueClusIDs)
+```
+
+----------------------------------------------------

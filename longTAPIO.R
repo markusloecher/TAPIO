@@ -3,8 +3,11 @@
 library(NbClust)
 library(fastcluster)
 library(FactoMineR)
-source("~/GitHub/TAPIO/calc_SIL.R")
-source("~/GitHub/TAPIO/association.R")
+
+
+source("calc_SIL.R")
+source("association.R")
+
 	
 longTAPIO <- function(DATA, k=NaN, n_features=NaN, n_trees=500, 
 						do.pca=TRUE, do.MFA=FALSE, do.leveling=TRUE, 
@@ -61,7 +64,8 @@ longTAPIO <- function(DATA, k=NaN, n_features=NaN, n_trees=500,
 
 		# sample rows - time stamps
 		ids2 = sapply(groups, sample, 1)
-		DATA_s = DATA_s[ids2, ]
+		#browser()
+		DATA_s = DATA_s[ids2]#DATA_s[ids2, ]
 
 		#print(DATA_s)
 		# PCA
