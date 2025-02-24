@@ -2,11 +2,13 @@
 title: "Clustering longitudinal data using TAPIO"
 author: "ML"
 date: "2025-02-14"
-output: html_document
+output: 
+  html_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = TRUE)
 rerun = FALSE
 ```
 
@@ -72,6 +74,8 @@ foundClusIDs = res2$cl
 table(foundClusIDs, trueClusIDs)
 ```
 
+## Multiple dimensions
+
 ### iris
 
 ```{r, echo = FALSE}
@@ -116,7 +120,7 @@ table(foundClusIDs, trueClusIDs)
 ```
 
 
-### Multiple dimensions! (from clusterMLD)
+### clusterMLD data
 
 ```{r}
 p = "data/"
