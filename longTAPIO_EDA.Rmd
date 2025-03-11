@@ -40,7 +40,7 @@ Mode <- function(x) {
 set.seed(123)
 ex2 <- kml::generateArtificialLongData(
    meanTrajectories=list(function(t)0,function(t)-t,function(t)t),
-   nbEachClusters=c(50,50,50),
+   nbEachClusters=c(50,50,50), time = 0:4,
    residualVariation=function(t){rnorm(1,0,0.35)}
 )
 
@@ -50,6 +50,11 @@ x =attr(ex2, "traj") #columns: time, rows: subjects
 user_ids = rep(1:nrow(x), each = ncol(x))
 
 matplot(t(x),type="l",lty=1, col= trueClusIDs) ;grid()     
+
+xLong = as.data.frame(matrix(as.vector(t(x)),ncol=1))
+xLong$time = rep(colnames(x), times = nrow(x))
+xLong$id = rep(1:nrow(x),each=5)
+xLong = xLong[,c(3,2,1)];colnames(xLong)[3]="value"
 ```
 
 #### kml inspired distance matrix

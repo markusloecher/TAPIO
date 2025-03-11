@@ -1,0 +1,81 @@
+---
+title: "Clustering longitudinal data using TAPIO and clusMLD"
+author: "ML"
+date: "2025-03-11"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = TRUE)
+rerun = FALSE
+```
+
+```{r}
+library(NbClust)
+library(fastcluster)
+library(FactoMineR)
+
+source("longTAPIO.R")
+source("longTAPIO_try.R")
+source("TAPIO.R")
+source("calc_SIL.R")
+source("association.R")
+
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+```
+
+
+
+
+### clusterMLD data
+
+```{r}
+p = "data/"
+load(paste0(p, "Longdat_clusters.rda"))
+# output = LongDataCluster(Longdat$Dat$obs,
+#                          Longdat$Dat[,paste("y", seq(5), sep = "_")],
+#                          Longdat$Dat$id)
+
+clusterMLD::MeanPlot(output)
+```
+```{r}
+clusterMLD::DendroPlot(output)
+```
+
+
+This time, we are not interpolating observation times!
+Instead we try to replace the call to `hclust()` in the TAPIO routine with code extracted from the `clusterMLD` library:
+
+```{r, eval = rerun, echo = F}
+#library(clusterMLD)
+data(Longdat, package = "clusterMLD")
+
+#y = Longdat$Dat[,paste("y", seq(5), sep = "_")]#[1:7,]
+#old_t = Longdat$Dat$obs#[1:7]
+
+```
+
+
+
+--------------------------
+
+Understanding the structure of the `hclust` object better:
+
+```{r, eval = FALSE}
+dim(USArrests)#50  4
+hc <- hclust(dist(USArrests), "ave")
+plot(hc)
+plot(hc, hang = -1)
+
+LEVELS = vector("list", 10)
+for(yy in 1:length(LEVELS)){
+				cl = cutree(hc, yy+1)
+				LEVELS[[yy]] = association(cl)
+}
+```
+
