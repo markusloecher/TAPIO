@@ -5,10 +5,11 @@ library(fastcluster)
 library(FactoMineR)
 source("calc_SIL.R")
 source("association.R")
+library(clusterMLD)
 
-clusMLD_TAPIO <- function(DATA, user_id, obsTimes, k=NaN, n_features=NaN, n_trees=500, 
+clusMLD_TAPIO <- function(DATA, user_id, obsTimes, k=NaN, n_features=NaN, n_trees=5, 
 						do.pca=TRUE, do.MFA=FALSE, do.leveling=TRUE, 
-						levels=10, max.k=10){
+						levels=10, max.k=10, verbose=1){
 
 	if(ncol(DATA)==2){
 		#n_features = 2
@@ -37,7 +38,7 @@ clusMLD_TAPIO <- function(DATA, user_id, obsTimes, k=NaN, n_features=NaN, n_tree
 	IMP  = vector("list", n_trees)
 
 	for (xx in 1:n_trees){
-
+    
 		ids    = sample(1:ncol(DATA), n_features, replace=TRUE)
 		#ids_no = (1:ncol(DATA))[-ids]
 
@@ -91,6 +92,7 @@ clusMLD_TAPIO <- function(DATA, user_id, obsTimes, k=NaN, n_features=NaN, n_tree
 			#PART[[xx]] = HCfused::association(cl)
 			PART[[xx]] = 1-dist(DATA_s)
 		}
+		if (verbose) cat("done with tree ", xx, "\n")
 	}
 
 	AFF  = Reduce("+", PART)

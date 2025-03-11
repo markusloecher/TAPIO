@@ -1,3 +1,5 @@
+library(cluster)
+
 calc.SIL <- function(mat, size, fix.k=NaN, method="ward.D"){
 
  #print(size)
@@ -12,7 +14,7 @@ calc.SIL <- function(mat, size, fix.k=NaN, method="ward.D"){
    count<-1
    for(xx in 2:(size)){
     cl <- kmeans(DIST, xx)$cluster
-    si <- silhouette(cl, DIST)
+    si <- cluster::silhouette(cl, DIST)
     SI[count] <- mean(si[,3])
     count <- count + 1 
    }
@@ -27,7 +29,7 @@ calc.SIL <- function(mat, size, fix.k=NaN, method="ward.D"){
     count <-1
     hc <- fastcluster::hclust(DIST, method=method)
     for(xx in 2:(size)){
-      si <- silhouette(cutree(hc,k=xx), DIST)
+      si <- cluster::silhouette(cutree(hc,k=xx), DIST)
       SI[count] <- mean(si[,3])
       count <- count + 1 
     }
@@ -37,7 +39,7 @@ calc.SIL <- function(mat, size, fix.k=NaN, method="ward.D"){
    }else{
     DIST  <- mat 
     hc <- fastcluster::hclust(DIST, method=method)
-    si <- silhouette(cutree(hc,k=fix.k), DIST)
+    si <- cluster::silhouette(cutree(hc,k=fix.k), DIST)
     SI <- mean(si[,3])
     names(SI) <- as.character(fix.k)
     return(SI)

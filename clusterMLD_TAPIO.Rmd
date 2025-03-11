@@ -8,8 +8,9 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, cache = FALSE)
 rerun = FALSE
+#devtools::install_github("junyzhou10/clusterMLD")
 ```
 
 ```{r}
@@ -22,11 +23,13 @@ source("longTAPIO_try.R")
 source("TAPIO.R")
 source("calc_SIL.R")
 source("association.R")
+source("clusMLD_TAPIO.R")
 
 Mode <- function(x) {
   ux <- unique(x)
   ux[which.max(tabulate(match(x, ux)))]
 }
+data(Longdat, package = "clusterMLD")
 ```
 
 
@@ -51,15 +54,19 @@ clusterMLD::DendroPlot(output)
 This time, we are not interpolating observation times!
 Instead we try to replace the call to `hclust()` in the TAPIO routine with code extracted from the `clusterMLD` library:
 
-```{r, eval = rerun, echo = F}
-#library(clusterMLD)
-data(Longdat, package = "clusterMLD")
-
-#y = Longdat$Dat[,paste("y", seq(5), sep = "_")]#[1:7,]
-#old_t = Longdat$Dat$obs#[1:7]
-
+```{r, eval = rerun, echo = TRUE}
+res = clusMLD_TAPIO(as.matrix(Longdat$Dat[,paste("y", seq(5), sep = "_")]),
+              user_id = Longdat$Dat$id, obsTimes = Longdat$Dat$obs, k=4, levels=4, n_trees=20)
+save(res, file = "data/clusMLD_TAPIO.rda")
 ```
 
+```{r}
+load("data/clusMLD_TAPIO.rda")
+trueClusIDs = aggregate(Longdat$Dat$label, function(x) return(x[1]), by = list(Longdat$Dat$id))[,2]
+foundClusIDs = res$cl
+#confusion matrix
+table(foundClusIDs, trueClusIDs)
+```
 
 
 --------------------------
