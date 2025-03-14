@@ -1,4 +1,7 @@
 # TAPIO
+
+**T**ree **A**ffinities with **P**r**i**ncipal C**o**mponents)
+
 <p align="center">
 <img src="https://github.com/pievos101/TAPIO/blob/main/pic.jpg" width="400">
 </p>

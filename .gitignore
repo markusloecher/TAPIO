@@ -2,5 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+.DS_Store
 longTAPIO_EDA_cache/
 longTAPIO_EDA_files/
